@@ -1,0 +1,49 @@
+---
+title: "Iris Flower Machine Learning Test"
+output: html_document
+date: "2023-11-21"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(caret)
+library(e1071)
+
+data("iris")
+```
+
+*We will use the base 'Iris' dataset within R.*
+
+```{r}
+ggplot(iris, aes(x = Sepal.Length, y = Sepal.Width, color = Species)) +
+  geom_point() +
+  labs(title = "Sepal Length vs Sepal Width by Species")
+```
+
+**Prep for the model creation**
+```{r}
+# Set seed for reproducibility
+set.seed(123)
+
+# Splitting the data into training and testing sets
+trainIndex <- createDataPartition(iris$Species, p = 0.7, list = FALSE)
+trainData <- iris[trainIndex, ]
+testData <- iris[-trainIndex, ]
+```
+
+
+**Making the model**
+```{r}
+# Train the model
+model <- svm(Species ~ ., data=trainData, kernel = "linear")
+
+# Make predictions regarding the test set
+predictions <- predict(model, testData)
+
+# Evaluation
+confusionMatrix(predictions, testData$Species)
+```
