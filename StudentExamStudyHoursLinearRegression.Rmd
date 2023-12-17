@@ -1,0 +1,65 @@
+---
+title: "Student Exam Scores Linear Regression"
+output: html_document
+date: "2023-11-24"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE}
+# Import libraries and data
+examstudytimedata <- read.csv("C:/Users/super/Desktop/Coding Projects/Data Sets/examstudytimedata.csv")
+library(ggplot2)
+library(e1071)
+library(caret)
+```
+
+```{r}
+# Organize and clean data
+studyHours <- examstudytimedata$Hours
+examScores <- examstudytimedata$Scores
+
+# Visualize the data 
+ggplot(examstudytimedata, aes(x = Hours, y = Scores)) +
+  geom_point() +
+  labs(title = "Hours and Scores for an Exam")
+
+ggplot(examstudytimedata, aes(x = Scores)) +
+  geom_boxplot(color = "red") +
+  labs(subtitle = "Boxplot of Exam Scores")
+
+ggplot(examstudytimedata, aes(x = Hours)) +
+  geom_boxplot(color = "blue") +
+  labs(subtitle = "Boxplot of Study Hours")
+```
+
+```{r}
+# Set seed
+set.seed(100)
+
+# Train and prepare model
+trainIndex <- createDataPartition(examScores, p = 0.8, list = FALSE)
+trainData <- examstudytimedata[trainIndex, ]
+testData <- examstudytimedata[-trainIndex, ]
+```
+
+
+```{r}
+model <- train(Scores ~ ., data = trainData,
+               method = "lm",
+               na.action = na.omit,
+               preProcess = c("scale", "center")
+)
+
+# Apply the model
+model.training <- predict(model, trainData)
+model.testing <- predict(model, testData)
+
+# Evaluate model
+ggplot(trainData, aes(x = Scores, y = model.training)) +
+  geom_point(color = "blue")
+
+summary(model)
+```
