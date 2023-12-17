@@ -1,0 +1,53 @@
+---
+title: "Drug Prescription Decision Tree by Manny McGrail"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+```{r, warning=FALSE, echo=FALSE}
+library(rpart)
+library(rpart.plot)
+library(ggplot2)
+drug200 <- read.csv("~/Desktop/Other Programming/Data/drug200.csv")
+```
+
+
+```{r, warning=FALSE}
+# Data visualization
+
+drug200$Cholesterol <- as.factor(drug200$Cholesterol)
+
+ggplot(drug200, aes(x = Age, fill = Sex)) +
+  geom_histogram(binwidth = 2)
+
+ggplot(drug200, aes(x = Cholesterol, fill = Sex)) +
+  geom_bar()
+
+ggplot(drug200, aes(y = Age, fill = Drug)) +
+  geom_boxplot()
+```
+
+
+```{r}
+table(drug200$Drug)
+```
+
+```{r}
+(treeOne <- rpart(Drug ~ ., data = drug200))
+rpart.plot(treeOne)
+```
+```{r}
+pred_labels <- predict(treeOne, drug200, type = "class")
+pred_labels[1:10]
+```
+
+```{r}
+(my_table <- table(our_predictions = pred_labels, reality = drug200$Drug))
+```
+
+```{r}
+accuracy <- sum(diag(my_table)/sum(my_table))
+print(accuracy)
+```
