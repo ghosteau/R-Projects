@@ -1,0 +1,109 @@
+---
+title: "California Housing"
+author: "Manny McGrail"
+date: "2023-12-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, warning=FALSE}
+# Load in libraries
+library(keras)
+library(dplyr)
+library(magrittr)
+library(neuralnet)
+```
+
+
+```{r}
+# I modified this data to be numeric for the "ocean proximity" value for ease of use.
+# 1 -- NEAR BAY
+# 2 -- NEAR OCEAN
+# 3 -- INLAND
+# 4 -- <1H OCEAN
+
+cali_data <- read.csv("C:/Users/super/Desktop/Coding Projects/Data Sets/California Housing Modified (Numeric).csv")
+
+cali_data$ocean_proximity <- as.numeric(cali_data$ocean_proximity)
+cali_data <- na.omit(cali_data)
+
+str(cali_data)
+```
+```{r}
+n <- neuralnet(median_house_value ~.,
+               data = cali_data,
+               hidden = c(10, 5), # 10 neurons in first layer, 5 neurons in second layer
+               linear.output = F,
+               lifesign = "full",
+               rep = 1)
+
+plot(n,
+     col.hidden = "darkgreen",
+     col.hidden.synapse = "darkgreen",
+     show.weights = F,
+     information = F,
+     fill = "violet")
+```
+
+
+```{r}
+cali_data <- as.matrix(cali_data)
+colnames(cali_data) <- NULL
+ncol(cali_data)
+```
+
+```{r}
+set.seed(123)
+
+index <- sample(2, nrow(cali_data), replace = T, prob = c(0.7, 0.3))
+trainingSet <- cali_data[index == 1, 1:9]
+testingSet <- cali_data[index == 2, 1:9]
+
+trainingTarget <- cali_data[index == 1, 10]
+testingTarget <- cali_data[index == 2, 10]
+```
+
+
+```{r}
+mean <- colMeans(trainingSet)
+std <- apply(trainingSet, 2, sd)
+
+trainingSet <- scale(trainingSet, center = mean, scale = std)
+testingSet <- scale(testingSet, center = mean, scale = std)
+```
+
+
+```{r}
+model <- keras_model_sequential()
+
+model %>%
+  layer_dense(units = 10, activation = "relu", input_shape = c(9)) %>%
+  layer_dense(units = 5, activation = "relu") %>%
+  layer_dense(units = 1)
+```
+
+
+```{r}
+# Compile the model
+model %>% compile(loss = "mse", optimizer = "adam", metrics = "mae")
+```
+
+
+```{r, results='hide'}
+# Fit the model; only running 10 epochs for the sake of efficiency. I highly encourage you to increase that for accuracy.
+mymodel <- model %>%
+  fit(trainingSet,
+      trainingTarget,
+      epochs = 10,
+      batch_size = 32,
+      validation_split = 0.2)
+```
+
+```{r}
+plot(mymodel)
+model %>% evaluate(testingSet, testingTarget)
+```
