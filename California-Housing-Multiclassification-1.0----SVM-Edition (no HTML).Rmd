@@ -1,0 +1,67 @@
+---
+title: "California Multiclassification 1.0"
+author: "Manny McGrail"
+date: "2023-12-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(caret)
+library(ggplot2)
+```
+
+
+```{r}
+# I modified this data to be numeric for the "ocean proximity" value for ease of use.
+# 1 -- NEAR BAY
+# 2 -- NEAR OCEAN
+# 3 -- INLAND
+# 4 -- <1H OCEAN
+# 5 -- ISLAND
+
+cali_data <- read.csv("C:/Users/super/Desktop/Coding Projects/Data Sets/California Housing (Numeric Modification).csv")
+
+cali_data <- na.omit(cali_data)
+cali_data$ocean_proximity <- as.factor(cali_data$ocean_proximity)
+
+str(cali_data)
+head(cali_data)
+```
+
+
+```{r}
+# Visualize the data
+
+ggplot(cali_data, aes(x = population, y = ocean_proximity, color = ocean_proximity)) +
+  geom_boxplot()
+
+ggplot(cali_data, aes(x = median_house_value, fill = ocean_proximity)) +
+  geom_histogram()
+
+ggplot(cali_data, aes(x = median_house_value, y = households, color = ocean_proximity)) +
+  geom_point()
+```
+
+
+```{r}
+set.seed(123)
+trainIndex <- createDataPartition(cali_data$ocean_proximity, p = 0.8, list = FALSE)
+
+trainingSet <- cali_data[trainIndex, ]
+testingSet <- cali_data[-trainIndex, ]
+
+dim(trainingSet)
+dim(testingSet)
+```
+
+
+```{r}
+model <- train(ocean_proximity ~., data = trainingSet, method = "svmLinear")
+
+predictions <- predict(model, newdata = testingSet)
+confusionMatrix(predictions, testingSet$ocean_proximity)
+```
