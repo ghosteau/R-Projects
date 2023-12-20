@@ -1,0 +1,95 @@
+---
+title: "Cancer Binary Classification DL Model"
+author: "Manny McGrail"
+date: "2023-12-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(keras)
+```
+
+
+```{r}
+# 1 -- Tumor must be removed
+# 0 -- Tumor is benign
+cancer <- read.csv("C:/Users/super/Desktop/Coding Projects/Data Sets/cancer.csv", header=TRUE)
+
+str(cancer)
+head(cancer)
+```
+
+
+```{r}
+cancer <- as.matrix(cancer)
+colnames(cancer) <- NULL
+
+str(cancer)
+ncol(cancer)
+```
+
+
+```{r}
+cancer[, 2:31] <- normalize(cancer[, 2:31])
+cancer[, 1] <- as.numeric(cancer[, 1])
+summary(cancer)
+```
+
+
+```{r}
+set.seed(123)
+
+index <- sample(2, nrow(cancer), replace = T, prob = c(0.7, 0.3))
+trainingSet <- cancer[index == 1, 2:31]
+testingSet <- cancer[index == 2, 2:31]
+
+trainingTarget <- cancer[index == 1, 1]
+testingTarget <- cancer[index == 2, 1]
+```
+
+
+```{r}
+trainLabels <- to_categorical(trainingTarget)
+testLabels <- to_categorical(testingTarget)
+
+head(testLabels)
+```
+
+
+```{r}
+model <- keras_model_sequential()
+
+model %>%
+  layer_dense(units = 256, activation = "sigmoid", input_shape = c(30)) %>%
+  layer_dense(units = 256, activation = "sigmoid") %>%
+  layer_dense(units = 2, activation = "sigmoid")
+```
+
+
+```{r}
+model %>%
+  compile(loss = "binary_crossentropy", optimizer = "adam", metrics = "accuracy")
+```
+
+
+```{r}
+# Using 100 epochs so the code is easier to knit
+history <- model %>%
+  fit(trainingSet, trainLabels, epochs = 100, batch_size = 32, validation_split = 0.2)
+```
+
+
+```{r}
+plot(history)
+```
+
+
+```{r}
+model %>%
+  evaluate(testingSet, testLabels)
+```
