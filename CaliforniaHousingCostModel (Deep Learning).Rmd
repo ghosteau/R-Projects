@@ -25,8 +25,9 @@ library(neuralnet)
 # 2 -- NEAR OCEAN
 # 3 -- INLAND
 # 4 -- <1H OCEAN
+# 5 -- ISLAND
 
-cali_data <- read.csv("C:/Users/super/Desktop/Coding Projects/Data Sets/California Housing Modified (Numeric).csv")
+cali_data <- read.csv("C:/Users/super/Desktop/Coding Projects/Data Sets/California Housing (Numeric Modification).csv")
 
 cali_data$ocean_proximity <- as.numeric(cali_data$ocean_proximity)
 cali_data <- na.omit(cali_data)
