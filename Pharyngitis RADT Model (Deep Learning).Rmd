@@ -1,0 +1,113 @@
+---
+title: "Pharyngitis RADT Model"
+author: "Manny McGrail"
+date: "2023-12-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+# We want to find if somebody needs rapid antogen detection (RADT)
+
+# Import libraries
+library(keras)
+library(neuralnet)
+```
+
+
+```{r}
+pharyngitis <- read.csv("C:/Users/super/Desktop/Coding Projects/Data Sets/pharyngitis (predict radt).csv")
+pharyngitis <- na.omit(pharyngitis)
+
+str(pharyngitis)
+```
+
+
+```{r}
+n <- neuralnet(radt..rapid.antogen.detection. ~.,
+               data = pharyngitis,
+               hidden = c(256, 256),
+               linear.output = F,
+               lifesign = "full",
+               rep = 1)
+
+plot(n,
+     col.hidden = "darkgreen",
+     col.hidden.synapse = "darkgreen",
+     show.weights = F,
+     information = F,
+     fill = "violet")
+```
+
+
+```{r}
+pharyngitis <- as.matrix(pharyngitis)
+
+str(pharyngitis)
+ncol(pharyngitis)
+```
+
+
+```{r}
+pharyngitis[, 2:19] <- normalize(pharyngitis[, 2:19])
+pharyngitis[, 1] <- as.numeric(pharyngitis[, 1])
+
+summary(pharyngitis)
+```
+
+
+```{r}
+set.seed(123)
+
+index <- sample(2, nrow(pharyngitis), replace = T, prob = c(0.7, 0.3))
+trainingSet <- pharyngitis[index == 1, 2:19]
+testingSet <- pharyngitis[index == 2, 2:19]
+
+trainLabels <- pharyngitis[index == 1, 1]
+testLabels <- pharyngitis[index == 2, 1]
+```
+
+
+```{r}
+trainLabels <- to_categorical(trainLabels)
+testLabels <- to_categorical(testLabels)
+
+head(testLabels)
+```
+
+
+```{r}
+# These regularizers seemed to give me the best results with the limited data given, but you may be able to manage without them
+model <- keras_model_sequential()
+
+model %>%
+  layer_dense(units = 256, activation = "sigmoid", input_shape = c(18), regularizer_l1(0.01)) %>%
+  layer_dense(units = 256, activation = "sigmoid", regularizer_l1(0.01)) %>%
+  layer_dense(units = 2, activation = "sigmoid")
+```
+
+
+```{r}
+model %>% 
+  compile(loss = "binary_crossentropy", optimizer = "adam", metrics = "accuracy")
+```
+
+
+```{r}
+history <- model %>%
+  fit(trainingSet, trainLabels, batch_size = 64, epochs = 500, validation_split = 0.2)
+```
+
+
+```{r}
+plot(history)
+```
+
+
+```{r}
+model %>% evaluate(testingSet, testLabels)
+```
