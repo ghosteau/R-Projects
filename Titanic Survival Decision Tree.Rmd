@@ -1,0 +1,82 @@
+---
+title: "Titanic Survival Prediction Decision Tree"
+author: "Manny McGrail"
+date: "2023-12-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r, warning=F}
+library(rpart)
+library(rpart.plot)
+library(ggplot2)
+```
+
+
+```{r}
+# Load in the data -- 0 means died, 1 means survived
+# I got rid of the names and ticket numbers in excel because those will be irrelevant to this analysis
+# I might eventually make a deep learning version and compare the results. For now, this is what I got. Enjoy!
+titanic <- read.csv("C:/Users/super/Desktop/Coding Projects/Data Sets/Titanic Survival Data.csv", stringsAsFactors=TRUE)
+
+# Clean data
+titanic <- na.omit(titanic)
+titanic$Survived <- as.factor(titanic$Survived)
+
+head(titanic)
+```
+
+
+```{r}
+# Visualize the data
+ggplot(titanic, aes(x = Age, fill = Survived)) +
+         geom_histogram(binwidth = 1)
+
+ggplot(titanic, aes(x = Survived, y = Age, color = Survived)) +
+  geom_boxplot()
+
+ggplot(titanic, aes(x = Sex, fill = Survived)) +
+  geom_bar()
+
+ggplot(titanic, aes(x = Pclass, fill = Survived)) +
+  geom_bar()
+
+ggplot(titanic, aes(x = Embarked, fill = Survived)) +
+  geom_bar()
+
+ggplot(titanic, aes(x = Fare, fill = Survived)) +
+  geom_histogram(binwidth = 5)
+```
+
+
+```{r}
+table(titanic$Survived)
+```
+
+
+```{r}
+# Create and plot our decision tree
+(treeOne <- rpart(Survived ~ ., data = titanic, cp = 0.001))
+rpart.plot(treeOne)
+```
+
+
+```{r}
+pred_labels <- predict(treeOne, titanic, type = "class")
+pred_labels[1:10]
+```
+
+
+```{r}
+my_table <- table(our_predictions = pred_labels, reality = titanic$Survived)
+```
+
+
+```{r}
+accuracy <- sum(diag(my_table)/sum(my_table))
+print(accuracy)
+```
